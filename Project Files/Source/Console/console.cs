@@ -610,8 +610,8 @@ namespace PowerSDR
         public DiversityForm diversityForm;
         public RAForm raForm;
 
-      //  public RadioInfo radio_info;
-      //  public ContactInfo contact_info;
+        //  public RadioInfo radio_info;
+        //  public ContactInfo contact_info;
 
         // public bool buffiszero = false;
 
@@ -621,6 +621,23 @@ namespace PowerSDR
         // private uint fwc_serial_num = 0;
         // private uint fwc_trx_serial_num = 0;
 
+        public Http httpFile;                           // ke9ns add
+        public HttpServer httpServer = null;           // rn3kk add
+
+        public SpotControl SpotForm;                       // ke9ns add DX spotter function
+        public ScanControl ScanForm;                       // ke9ns add freq Scanner function
+        public StackControl StackForm;                     // ke9ns add band stack form
+        public SwlControl SwlForm;                         // ke9ns add band swl form
+
+        //====================================================================================
+
+        private DXMemList dxmemList; // ke9ns add
+        public DXMemList DXMemList // ke9ns add
+        {
+            get { return dxmemList; }
+        }
+
+        //=======================================================================================
 
         private int rx1_squelch_threshold_scroll = -160;
         private int rx2_squelch_threshold_scroll = -160;
@@ -1568,6 +1585,7 @@ namespace PowerSDR
         private CheckBoxTS chkVFOBLock;
         public PictureBox picWaterfall;
 
+        public ToolStripMenuItem spotterMenu;
         #endregion
 
         #region Constructor and Destructor
@@ -2302,6 +2320,7 @@ namespace PowerSDR
             this.cWXToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.eSCToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.collapseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.spotterMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.displayControlsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.topControlsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.bandControlsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -5048,6 +5067,7 @@ namespace PowerSDR
             this.cWXToolStripMenuItem,
             this.eSCToolStripMenuItem,
             this.collapseToolStripMenuItem,
+            this.spotterMenu,
             this.displayControlsToolStripMenuItem,
             this.dSPToolStripMenuItem,
             this.bandToolStripMenuItem,
@@ -5114,6 +5134,13 @@ namespace PowerSDR
             this.collapseToolStripMenuItem.Name = "collapseToolStripMenuItem";
             resources.ApplyResources(this.collapseToolStripMenuItem, "collapseToolStripMenuItem");
             this.collapseToolStripMenuItem.Click += new System.EventHandler(this.CollapseToolStripMenuItem_Click);
+            // 
+            // spotterMenu
+            // 
+            this.spotterMenu.ForeColor = System.Drawing.SystemColors.ControlLightLight;
+            this.spotterMenu.Name = "spotterMenu";
+            resources.ApplyResources(this.spotterMenu, "spotterMenu");
+            this.spotterMenu.Click += new System.EventHandler(this.spotterMenu_Click);
             // 
             // displayControlsToolStripMenuItem
             // 
@@ -16633,6 +16660,17 @@ namespace PowerSDR
         public double CurrentTuneStepMHz
         {
             get { return tune_step_list[tune_step_index].StepHz * 1e-6; }
+        }
+
+        //====================================================================================================
+        //====================================================================================================
+        // ke9ns add Thread routine
+        private void spotterMenu_Click(object sender, EventArgs e)
+        {
+            if (SpotForm == null || SpotForm.IsDisposed) SpotForm = new SpotControl(this);
+
+            SpotForm.Show();
+            SpotForm.Focus();
         }
 
         #endregion
@@ -28296,7 +28334,7 @@ namespace PowerSDR
 
         #region Display Routines
 
-        private void UpdateDisplay()
+        public void UpdateDisplay()                                                     // private made public --- aj6bc
         {
             switch (current_display_engine)
             {
@@ -52912,10 +52950,406 @@ namespace PowerSDR
                 //    else btnTNFAdd.ForeColor = SystemColors.ControlLightLight;
                 //}
                 AlexAntCtrlEnabled = alex_ant_ctrl_enabled;
-           // }
+            // }
         }
 
-     }
+        public int last_MHZ = 0; // ke9ns 
+        public DSPMode last_MODE = DSPMode.LAST;
+
+        public static int suncounter = 2; // for space weather
+        public static int noaaON = 0; // for space weather
+        public static int SFI = 0;       // for Space weather
+        public static int SN = 0;        // for Space weather
+        public static int Aindex = 0;    // for Space weather
+
+        public static int Kindex = 0;    // for Space weather
+
+        public static string RadioBlackout = " ";    // R scale
+        public static string GeoBlackout = " ";      // G scale
+        public static int EISN = 0;                    // Estimated International Sunspot Number
+        private string serverPath;       // for Space weather
+        private string serverPath1;       // for Space weather
+
+        public Mutex WWV_mutex = new Mutex();
+        public float[] WWV_data = new float[16384];          //  used to get out_l_ptr1 audio stream in 2048 pieces at a time
+        public int WWVframeCount = 0;
+        public int WWV_Count = 0;
+        public int WWVTone = 0;                             // Magnetude of the Tone received in audio.cs routine
+        public bool WWVReady = false;                       // let you know when a new magnetude is updated
+        public Stopwatch WWVST = new Stopwatch();
+        public float[] wwvbuf = new float[Display.BUFFER_SIZE];
+        public int wwvVal = -300;
+
+
+        //=========================================================================================
+        //=========================================================================================
+        // ke9ns add allows Http server to talk with Setup through Console
+
+        public static int m_port = 0;   // ke9ns add port# 
+        public static bool m_terminated = true;
+        public void NOAA()
+        {
+
+            Debug.WriteLine("GET NOAA=========");
+
+            suncounter = 1;
+            serverPath = "ftp://ftp.swpc.noaa.gov/pub/latest/wwv.txt";
+
+            FtpWebRequest request = (FtpWebRequest)WebRequest.Create(serverPath);
+
+            //  textBox1.Text += "Attempt to download Space Weather \r\n";
+
+            request.KeepAlive = true;
+            request.UsePassive = true;
+            request.UseBinary = true;
+
+            request.Method = WebRequestMethods.Ftp.DownloadFile;
+            string username = "anonymous";
+            string password = "guest";
+            request.Credentials = new NetworkCredential(username, password);
+
+            string noaa = null;
+
+            try
+            {
+                FtpWebResponse response = (FtpWebResponse)request.GetResponse();
+
+                Stream responseStream = response.GetResponseStream();
+                StreamReader reader = new StreamReader(responseStream);
+                noaa = reader.ReadToEnd();
+
+                reader.Close();
+                response.Close();
+                //   Debug.WriteLine("noaa=== " + noaa);
+
+                //   textBox1.Text += "NOAA Download complete \r\n";
+
+
+
+                //--------------------------------------------------------------------
+                if (noaa.Contains("Solar flux ")) // 
+                {
+
+                    int ind = noaa.IndexOf("Solar flux ") + 11;
+
+                    try
+                    {
+                        SFI = (int)(Convert.ToDouble(noaa.Substring(ind, 3)));
+                        Debug.WriteLine("SFI " + SFI);
+                    }
+                    catch (Exception)
+                    {
+                        SFI = 0;
+                    }
+
+
+                } // SFI
+
+                if (noaa.Contains("A-index ")) // 
+                {
+
+                    int ind = noaa.IndexOf("A-index ") + 8;
+
+                    try
+                    {
+                        Aindex = (int)(Convert.ToDouble(noaa.Substring(ind, 2)));
+                        Debug.WriteLine("Aindex " + Aindex);
+                    }
+                    catch (Exception)
+                    {
+                        Aindex = 0;
+                    }
+
+
+                } // Aindex
+
+                if (noaa.Contains("K-index ") && noaa.Contains(" was ")) // 
+                {
+
+                    int ind = noaa.IndexOf(" was ") + 5;
+
+                    try
+                    {
+                        Kindex = (int)(Convert.ToDouble(noaa.Substring(ind, 2)));
+                        Debug.WriteLine("Kindex " + Aindex);
+                    }
+                    catch (Exception)
+                    {
+                        Kindex = 0;
+                    }
+
+
+                } // Kindex
+
+
+                if (noaa.Contains("Radio blackouts reaching the ")) // 
+                {
+
+                    int ind = noaa.IndexOf("Radio blackouts reaching the ") + 29;
+
+                    try
+                    {
+                        RadioBlackout = noaa.Substring(ind, 2);
+                        Debug.WriteLine("Radio Blackout " + RadioBlackout);
+                    }
+                    catch (Exception)
+                    {
+                        RadioBlackout = " ";
+                    }
+
+
+                } // radio blackouts
+                else
+                {
+                    RadioBlackout = " ";
+                }
+
+                if (noaa.Contains("level occurred") && noaa.Contains("Geomagnetic storms reaching the ")) // 
+                {
+
+                    int ind = noaa.IndexOf("Geomagnetic storms reaching the ") + 32;
+
+                    try
+                    {
+                        GeoBlackout = noaa.Substring(ind, 2);
+                        Debug.WriteLine("Geomagnetic storms" + GeoBlackout);
+                    }
+                    catch (Exception)
+                    {
+                        GeoBlackout = " ";
+                    }
+
+
+                } //geo storms
+                else
+                {
+                    GeoBlackout = " ";
+                }
+
+                if (RadioBlackout != " ")
+                {
+                    RadioBlackout = RadioBlackout + GeoBlackout;
+                    Debug.WriteLine("radio-geo " + RadioBlackout);
+
+                }
+                else
+                {
+                    RadioBlackout = GeoBlackout;
+                    Debug.WriteLine("geo " + RadioBlackout);
+                }
+
+            } // try
+            catch (Exception)
+            {
+                noaaON = 0; // failure to get data
+            }
+
+            Debug.WriteLine("endof NOAA thread");
+
+
+            //--------------------------------------------------------------------------
+            //--------------------------------------------------------------------------
+            //--------------------------------------------------------------------------
+            //--------------------------------------------------------------------------
+            // ke9ns get Estimated International Sunspot Number (EISN)
+
+
+            Debug.WriteLine("GET SIDC=========");
+
+            suncounter = 1;
+            serverPath1 = "http://www.sidc.be/silso/DATA/EISN/EISN_current.txt";
+
+            try
+            {
+
+                HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(serverPath1);
+                HttpWebResponse webResponse = (HttpWebResponse)webRequest.GetResponse();
+
+                Stream responseStream1 = webResponse.GetResponseStream();
+                StreamReader streamReader1 = new StreamReader(responseStream1);
+
+                string eisn = streamReader1.ReadToEnd();
+
+                responseStream1.Close();
+                streamReader1.Close();
+
+
+                Debug.WriteLine("GET SIDC1=========" + eisn);
+
+                int len = eisn.Length;
+
+                Debug.WriteLine("GET SIDC2=========" + len);
+
+                string sub1 = eisn.Substring(len - 18, 3); // get Sunspot value from end of file (newest data)
+
+                Debug.WriteLine("GET SIDC3=========" + sub1);
+
+                try
+                {
+                    EISN = Convert.ToInt16(sub1);
+
+                }
+                catch (Exception)
+                {
+                    EISN = 0;
+                    Debug.WriteLine("Failed to detect EISN# from text file");
+
+                }
+
+            }
+            catch (Exception)
+            {
+                Debug.WriteLine("Could not get SIDC EISN#");
+            }
+
+            Debug.WriteLine("endof SIDC thread");
+
+
+        }
+
+
+        public bool HttpServer
+        {
+
+            set
+            {
+                httpFile.HttpServer1();
+            }
+
+        } //HttpServer
+
+        private float rx1_path_offset = 0.0f;
+        public float RX1PathOffset
+        {
+            get { return rx1_path_offset; }
+        }
+
+        //=======================================================================================
+        // ke9ns add
+        public int ReadStrength(uint sub)
+        {
+            float num = 0f;
+            num = wdsp.CalculateRXMeter(0, sub, wdsp.MeterType.SIGNAL_STRENGTH);
+            num = num +
+                rx1_meter_cal_offset +
+                rx1_preamp_offset[(int)rx1_preamp_mode] +
+                rx1_path_offset + rx1_xvtr_gain_offset;
+            return (int)num;
+
+        }
+
+        private int sample_rate_rx1 = 48000;
+        public int SampleRateRX1
+        {
+            get { return sample_rate_rx1; }
+            set
+            {
+                sample_rate_rx1 = value;
+                RadioDSP.SampleRate = value;
+                Audio.SampleRate1 = value;
+                Display.SampleRateRX1 = value;
+                // NetworkIO.SetSampleRate(0, value);
+                // NetworkIO.SetSampleRate(2, value);
+                //CWSynth.SampleRate = value;
+                switch (rx1_dsp_mode)
+                {
+                    case DSPMode.SPEC:
+                        SetRX1Mode(DSPMode.SPEC);
+                        break;
+                }
+
+                switch (Display.CurrentDisplayMode)
+                {
+                    case DisplayMode.PANADAPTER:
+                    case DisplayMode.WATERFALL:
+                    case DisplayMode.PANAFALL:
+                    case DisplayMode.PANASCOPE:
+                        CalcDisplayFreq();
+                        //CalcRX2DisplayFreq();
+                        btnDisplayPanCenter.PerformClick();
+                        break;
+                    case DisplayMode.SPECTRUM:
+                    case DisplayMode.HISTOGRAM:
+                        UpdateRXSpectrumDisplayVars();
+                        break;
+                }
+            }
+        }
+        //=======================================================================================
+        // ke9ns add
+        public int ReadAvgStrength(uint sub)
+        {
+            float num = 0f;
+            num = wdsp.CalculateRXMeter(0, sub, wdsp.MeterType.AVG_SIGNAL_STRENGTH);
+            num = num +
+                rx1_meter_cal_offset +
+                rx1_preamp_offset[(int)rx1_preamp_mode] +
+                rx1_path_offset +
+                rx1_xvtr_gain_offset;
+            return (int)num;
+        }
+        //====================================================================================================
+        // ke9ns
+        public bool SWLFORM
+        {
+            get
+            {
+                return false;
+            }
+            set
+            {
+                if (SwlForm == null || SwlForm.IsDisposed) SwlForm = new SwlControl(this); // ke9ns add communicate with swl list controls
+
+                SwlForm.Show();
+                SwlForm.Focus();
+                SwlForm.WindowState = FormWindowState.Normal; // ke9ns add
+
+
+                // = value;
+            }
+        }
+
+        //=================================================================================================
+        // ke9ns mod 
+
+        public static int[] SXX = new int[200]; // ke9ns add used for qrz hyperlinking(these are the callsign locations on the screen)
+        public static int[] SXY = new int[200]; // 
+        public static int[] SXW = new int[200]; //
+        public static int[] SXH = new int[200]; //  
+        public static string[] SXS = new string[200]; // ties it back to the real DX_Index
+        public static int SXK = 0;               // number of spots on picdisplay
+
+        public static int SXR = 0;               // 1=doing an QRZ hyperlink
+        public static int SX_X = 0;               //x cursor pos inside picdisplay
+        public static int SX_Y = 0;               //y  cursor pos inside picdisplay
+
+
+        public static int[] DXX = new int[200]; // ke9ns add used for qrz hyperlinking(these are the callsign locations on the screen)
+        public static int[] DXY = new int[200]; // 
+        public static int[] DXW = new int[200]; //
+        public static int[] DXH = new int[200]; //  
+        public static string[] DXS = new string[200]; // ties it back to the real DX_Index
+        public static int DXK = 0;               // number of spots on picdisplay
+        public static int DXK2 = 0;               // number of spots on picdisplay
+
+        public static int[] MMX = new int[200]; // ke9ns add X used for MEMORY hyperlinking(these are the callsign locations on the screen)
+        public static int[] MMY = new int[200]; //           Y
+        public static int[] MMW = new int[200]; //           W
+        public static int[] MMH = new int[200]; //           H
+        public static int[] MMM = new int[200]; //           Index postion in Memory.xml file
+        public static string[] MMS = new string[200]; // ties it back to the real MEMORY NAME
+
+        public static int MMK3 = 0;               // number of MEMORY spots on picdisplay
+        public static int MMK4 = 0;               // number of spots on picdisplay
+
+        public static bool DisplaySpot = true;               // true displays spot, false displays spotter
+
+        public static int DX_X = 0;               //x cursor pos inside picdisplay 
+        public static int DX_Y = 0;               //y  cursor pos inside picdisplay
+
+        private bool m_bDraggingPanafallSplit = false;
+
+    }
 
     public class DigiMode
     {

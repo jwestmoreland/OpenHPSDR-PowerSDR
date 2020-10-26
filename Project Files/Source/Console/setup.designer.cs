@@ -52897,6 +52897,15 @@
         private System.Windows.Forms.RadioButtonTS radPROLatency0;
         private System.Windows.Forms.CheckBoxTS chkBPF1HFLNAControl;
         private System.Windows.Forms.CheckBoxTS chkBPF2HFLNAControl;
+#if false
+        public static Color DisplayGrayLineColor = Color.FromArgb(70, Color.Black); // ke9ns add default value
+        public void clrbtnGrayLine_Changed(object sender, EventArgs e)
+        {
+            DisplayGrayLineColor = Color.FromArgb(tbGrayLineAlpha.Value, clrbtnGrayLine.Color);
+
+        }
+#endif
+
 
     }
 }

@@ -134,6 +134,24 @@
       <HintPath>..\..\..\..\..\..\..\..\..\Program Files\Microsoft.NET\Primary Interop Assemblies\adodb.dll</HintPath>
       <AssemblyFolderKey>hklm\primary interop assemblies</AssemblyFolderKey>
     </Reference>
+    <Reference Include="SharpDX">
+      <HintPath>..\..\lib\SharpDX\SharpDX.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Desktop">
+      <HintPath>..\..\lib\SharpDX\SharpDX.Desktop.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Direct2D1">
+      <HintPath>..\..\lib\SharpDX\SharpDX.Direct2D1.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Direct3D11">
+      <HintPath>..\..\lib\SharpDX\SharpDX.Direct3D11.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.DXGI">
+      <HintPath>..\..\lib\SharpDX\SharpDX.DXGI.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Mathematics">
+      <HintPath>..\..\lib\SharpDX\SharpDX.Mathematics.dll</HintPath>
+    </Reference>
     <Reference Include="SlimDX, Version=4.0.13.43, Culture=neutral, PublicKeyToken=b1b0c32fd1ffe4f9, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\bin\Release\SlimDX.dll</HintPath>
@@ -175,8 +193,11 @@
     </Compile>
     <Compile Include="Channel.cs" />
     <Compile Include="Clock.cs" />
+    <Compile Include="conrec.cs" />
     <Compile Include="CW\CWInput.cs" />
+    <Compile Include="GetTRXParamHandler.cs" />
     <Compile Include="GlobalMouseHandler.cs" />
+    <Compile Include="HandlerFactory.cs" />
     <Compile Include="HPSDR\Alex.cs" />
     <Compile Include="alphawarnform.cs">
       <SubType>Form</SubType>
@@ -258,9 +279,13 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="HPSDR\specHPSDR.cs" />
+    <Compile Include="Http.cs" />
+    <Compile Include="HttpServer.cs" />
     <Compile Include="hw_register.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="IHandler.cs" />
+    <Compile Include="ImageRequestHandler.cs" />
     <Compile Include="InputBox.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -306,6 +331,8 @@
     <Compile Include="logon.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Memory\DXMemList.cs" />
+    <Compile Include="Memory\DXMemRecord.cs" />
     <Compile Include="Memory\MemoryForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -363,6 +390,8 @@
     <Compile Include="ringbuffer.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="scan.cs" />
+    <Compile Include="SetParamRequestHandler.cs" />
     <Compile Include="setup.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -374,9 +403,14 @@
     <Compile Include="splash.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="spot.cs" />
+    <Compile Include="spot_options.cs" />
+    <Compile Include="stack.cs" />
+    <Compile Include="swl.cs" />
     <Compile Include="ThreadedBindingList.cs" />
     <Compile Include="titlebar.cs" />
     <Compile Include="TuneStep.cs" />
+    <Compile Include="UnknownRequestHandler.cs" />
     <Compile Include="usb.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -386,6 +420,7 @@
     <Compile Include="wave_options.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="WebPageRequestHandler.cs" />
     <Compile Include="win32.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -909,6 +944,9 @@
       <DependentUpon>RAForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\digital7.ttf" />
+    <EmbeddedResource Include="scan.resx">
+      <DependentUpon>scan.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="setup.es.resx">
       <DependentUpon>setup.cs</DependentUpon>
     </EmbeddedResource>
@@ -945,6 +983,16 @@
     <EmbeddedResource Include="splash.zh-Hant.resx">
       <DependentUpon>splash.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="spot.resx">
+      <DependentUpon>spot.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="spot_options.resx">
+      <DependentUpon>spot_options.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="stack.resx">
+      <DependentUpon>stack.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="swl.resx" />
     <EmbeddedResource Include="wave.es.resx">
       <DependentUpon>wave.cs</DependentUpon>
     </EmbeddedResource>

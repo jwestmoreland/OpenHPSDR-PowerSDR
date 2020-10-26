@@ -48,16 +48,58 @@ namespace PowerSDR
     using System.Runtime.InteropServices;
     using SlimDX;
     using SlimDX.Direct3D9;
+    using SlimDX.Direct2D;
+
     //using SlimDX.Windows;
     //  using ManagedCuda;
     //  using ManagedCuda.BasicTypes;
     //  using ManagedCuda.VectorTypes;
     //  using ManagedCuda.CudaFFT;
     //using System.Linq;
+//    using SharpDX;
+//   using SharpDX.Direct2D1;
+//    using SharpDX.Direct3D;
+//    using SharpDX.Direct3D11;
+//    using SharpDX.DXGI;
+    // fix clashes with sharpdx
+ //   using Bitmap = System.Drawing.Bitmap;
+ //   using Rectangle = System.Drawing.Rectangle;
+ //   using Color = System.Drawing.Color;
+ //   using Brush = System.Drawing.Brush;
+ //   using Point = System.Drawing.Point;
+ //   using Pen = System.Drawing.Pen;
+ //   using PixelFormat = System.Drawing.Imaging.PixelFormat;
+ //   using DashStyle = System.Drawing.Drawing2D.DashStyle;
+    // SharpDX clashes -- note changes made to SlimDX vs. SharpDX --- aj6bc
+ //   using AlphaMode = SlimDX.Direct2D.AlphaMode;
+ //   using Device = SlimDX.Direct3D9.Device;
+ //   using RectangleF = SharpDX.RectangleF;
+ //   using SDXPixelFormat = SlimDX.Direct2D.PixelFormat;
+
+    using SharpDX;
+    using SharpDX.Direct2D1;
+    using SharpDX.Direct3D;
+    using SharpDX.Direct3D11;
+    using SharpDX.DXGI;
+    // fix clashes with sharpdx
+    using Bitmap = System.Drawing.Bitmap;
+    using Rectangle = System.Drawing.Rectangle;
+    using Color = System.Drawing.Color;
+    using Brush = System.Drawing.Brush;
+    using Point = System.Drawing.Point;
+    using Pen = System.Drawing.Pen;
+    using PixelFormat = System.Drawing.Imaging.PixelFormat;
+    using DashStyle = System.Drawing.Drawing2D.DashStyle;
+    // SharpDX clashes
+    using AlphaMode = SharpDX.Direct2D1.AlphaMode;
+    using Device = SharpDX.Direct3D11.Device;
+    using RectangleF = SharpDX.RectangleF;
+    using SDXPixelFormat = SharpDX.Direct2D1.PixelFormat;
+
 
     struct Vertex
     {
-        public Vector4 Position;
+        public SharpDX.Vector4 Position;
         public int Color;
     }
 
@@ -104,6 +146,20 @@ namespace PowerSDR
         public const int BUFFER_SIZE = 16384;
 
         public static Console console;
+        public static SpotControl SpotForm;                     // ke9ns add  communications with spot.cs and dx spotter
+
+        private static int displayTargetHeight = 0;	// target height
+        private static int displayTargetWidth = 0;  // target width
+
+        //       private static Bitmap waterfall_bmp = null;					// saved waterfall picture for display
+        //       private static Bitmap waterfall_bmp2 = null;
+
+        //        private static SlimDX.Direct2D.Bitmap waterfall_bmp_dx2d = null;					// MW0LGE  
+        //       private static SlimDX.Direct2D.Bitmap waterfall_bmp2_dx2d = null;             
+
+        private static SharpDX.Direct2D1.Bitmap waterfall_bmp_dx2d = null;					// MW0LGE
+        private static SharpDX.Direct2D1.Bitmap waterfall_bmp2_dx2d = null;
+
         //private static Mutex background_image_mutex;			// used to lock the base display image
         //private static Bitmap background_bmp;					// saved background picture for display
         //private static Bitmap display_bmp;					// Bitmap for use when drawing
@@ -148,24 +204,24 @@ namespace PowerSDR
         public static DXRectangle Hangrect_bottom;
         // private static VertexBuffer VerLine_vb = null;
         // private static VertexBuffer HorLine_vb = null;
-        private static VertexBuffer VerLines_vb = null;
-        private static VertexBuffer HorLines_vb = null;
-        private static VertexBuffer VerLines_bottom_vb = null;
-        private static VertexBuffer HorLines_bottom_vb = null;
-        private static VertexBuffer PanLine_vb = null;
-        private static VertexBuffer PanLine_vb_fill = null;
-        private static VertexBuffer PanLine_bottom_vb = null;
-        private static VertexBuffer PanLine_bottom_vb_fill = null;
-        private static VertexBuffer ScopeLine_vb = null;
+        private static SharpDX.Direct2D1.VertexBuffer VerLines_vb = null;  
+        private static SharpDX.Direct2D1.VertexBuffer HorLines_vb = null;
+        private static SharpDX.Direct2D1.VertexBuffer VerLines_bottom_vb = null;
+        private static SharpDX.Direct2D1.VertexBuffer HorLines_bottom_vb = null;
+        private static SharpDX.Direct2D1.VertexBuffer PanLine_vb = null;
+        private static SharpDX.Direct2D1.VertexBuffer PanLine_vb_fill = null;
+        private static SharpDX.Direct2D1.VertexBuffer PanLine_bottom_vb = null;
+        private static SharpDX.Direct2D1.VertexBuffer PanLine_bottom_vb_fill = null;
+        private static SharpDX.Direct2D1.VertexBuffer ScopeLine_vb = null;
         private static Vertex[] PanLine_verts = null;
         private static Vertex[] PanLine_bottom_verts = null;
         private static Vertex[] ScopeLine_verts = null;
         private static Vertex[] PanLine_verts_fill = null;
         private static Vertex[] PanLine_bottom_verts_fill = null;
         private static Vertex[] Phase_verts = null;
-        private static VertexBuffer Phase_vb = null;
+        private static SharpDX.Direct2D1.VertexBuffer Phase_vb = null;
         private static Vertex[] HistogramLine_verts = null;
-        private static VertexBuffer Histogram_vb = null;
+        private static SharpDX.Direct2D1.VertexBuffer Histogram_vb = null;
         private static float[] panadapterX_data = null;
         private static float[] panadapterX_data_bottom = null;
         private static Point[] points = null;
@@ -183,15 +239,15 @@ namespace PowerSDR
         private static Sprite Waterfall_Sprite = null;
         private static Rectangle Waterfall_texture_size;
         // private static AutoResetEvent Waterfall_Event;
-        private static VertexBuffer WaterfallLine_vb = null;
+        private static SharpDX.Direct2D1.VertexBuffer WaterfallLine_vb = null;
         private static Vertex[] WaterfallLine_verts = null;
         private static float[] waterfallX_data = null;
         private static Rectangle waterfall_rect;
         private static byte[] waterfall_memory;
-        private static Surface backbuf;
+        private static SlimDX.Direct3D9.Surface backbuf;     
         private static int waterfall_bmp_size;
         private static int waterfall_bmp_stride;
-        private static DataStream waterfall_data_stream;
+        private static SharpDX.DataStream waterfall_data_stream;
         private static float[] waterfall_data;
         private static int waterfall_alpha = 255;
         public static bool DX_reinit = false;
@@ -207,6 +263,13 @@ namespace PowerSDR
         public static bool RefreshPanadapterGrid
         {
             set { refresh_panadapter_grid = value; }
+        }
+
+        private static int sample_rate_rx1 = 384000;
+        public static int SampleRateRX1
+        {
+            get { return sample_rate_rx1; }
+            set { sample_rate_rx1 = value; }
         }
 
         private static bool tnf_zoom = false;
@@ -310,7 +373,7 @@ namespace PowerSDR
                 if (!console.booting)
                 {
                     panadapter_font.Dispose();
-                    panadapter_font = new SlimDX.Direct3D9.Font(device, pan_font);
+                    panadapter_font = new Font(device, pan_font);
                 }
             }
         }
@@ -485,6 +548,17 @@ namespace PowerSDR
             }
         }
 
+        //================================================================
+        // kes9ns add signal from setup grid lines on/off
+        private static byte grid_off = 0; //  ke9ns ADD from setup 0=normal  1=gridlines off
+        public static byte GridOff       // this is called or set in setup
+        {
+            get { return grid_off; }
+            set
+            {
+                grid_off = value;
+            }
+        }
         private static long vfoa_sub_hz;
         public static long VFOASub //multi-rx freq
         {
@@ -494,6 +568,96 @@ namespace PowerSDR
                 vfoa_sub_hz = value;
                 if (current_display_mode == DisplayMode.PANADAPTER)
                     refresh_panadapter_grid = true;
+            }
+        }
+
+        private static float m_fPanafallSplitPerc = 0.5f;
+        public static float PanafallSplitBarPerc
+        {
+            get { return m_fPanafallSplitPerc; }
+            set
+            {
+                m_fPanafallSplitPerc = value;
+            }
+        }
+
+        private static bool m_bSpecialPanafall = false; // ke9ns add 1=map mode (panafall but only a small waterfall) and only when just in RX1 mode)
+        public static bool SpecialPanafall
+        {
+            get { return m_bSpecialPanafall; }
+            set
+            {
+                m_bSpecialPanafall = value;
+                if (m_bSpecialPanafall)
+                {
+                    m_fPanafallSplitPerc = 0.8f;
+                }
+                else
+                {
+                    m_fPanafallSplitPerc = 0.5f;
+                }
+                ResetWaterfallBmp();
+            }
+        }
+        private static Object m_objDX2Lock = new Object();
+        private static SharpDX.Direct2D1.RenderTarget d2dRenderTarget;
+        public static void ResetWaterfallBmp(/*int scale*/)
+        {
+            //if (!bIsPanafall)
+            //{
+            //    if (Display.RX2Enabled)
+            //        Display.ResetWaterfallBmp(2);
+            //    else
+            //        Display.ResetWaterfallBmp(1);
+            //}
+            //else
+            //{
+            //    if (Display.RX2Enabled)
+            //        Display.ResetWaterfallBmp(4);
+            //    else
+            //        Display.ResetWaterfallBmp(2);
+            //}
+
+            int H = displayTargetHeight;
+            if (current_display_mode == DisplayMode.PANAFALL) H /= 2;
+            if (rx2_enabled) H /= 2;
+
+            //override for splitter pos, when only one rx and it is panafall
+            if (!rx2_enabled && current_display_mode == DisplayMode.PANAFALL) H = displayTargetHeight - PanafallSplitBarPos;
+
+            if (current_display_engine == DisplayEngine.GDI_PLUS)
+            {
+                if (waterfall_bmp != null) waterfall_bmp.Dispose();
+                waterfall_bmp = new Bitmap(displayTargetWidth, /*(displayTargetHeight / scale)*/ H - 20, PixelFormat.Format24bppRgb);
+            }
+            else
+            {
+                lock (m_objDX2Lock)
+                {
+                    SharpDX.Direct2D1.Bitmap tmp = null;
+                    if (waterfall_bmp_dx2d != null && !waterfall_bmp_dx2d.IsDisposed)
+                    {
+                        if (displayTargetWidth == waterfall_bmp_dx2d.Size.Width)
+                        {
+                            // make copy only if widths equal
+                            tmp = new SharpDX.Direct2D1.Bitmap(d2dRenderTarget, new Size2((int)waterfall_bmp_dx2d.Size.Width, (int)waterfall_bmp_dx2d.Size.Height),
+                                    new SharpDX.Direct2D1.BitmapProperties(new SDXPixelFormat(SharpDX.DXGI.Format.B8G8R8A8_UNorm, AlphaMode.Premultiplied)));
+
+                            tmp.CopyFromBitmap(waterfall_bmp_dx2d, new SharpDX.Point(0, 0), new SharpDX.Rectangle(0, 0, (int)tmp.Size.Width, (int)tmp.Size.Height));
+                            //
+                        }
+                    }
+                    
+                    if (waterfall_bmp_dx2d != null) waterfall_bmp_dx2d.Dispose(); 
+                     waterfall_bmp_dx2d = new SharpDX.Direct2D1.Bitmap(d2dRenderTarget, new Size2(displayTargetWidth, /*(displayTargetHeight / scale)*/ H - 20), new BitmapProperties(new SDXPixelFormat(Format.B8G8R8A8_UNorm, AlphaMode.Premultiplied)));
+                    
+                    if (tmp != null)
+                    {
+                        // copy old waterfall into new bitmap
+                        waterfall_bmp_dx2d.CopyFromBitmap(tmp, new SharpDX.Point(0, 0)); // anything outside will be 'ignored'
+                        tmp.Dispose();
+                    }
+                }
             }
         }
 
@@ -575,6 +739,14 @@ namespace PowerSDR
             {
                 rx2_freq_diff = value;
             }
+        }
+
+        public static int PanafallSplitBarPos
+        {
+            get { return (int)(displayTargetHeight * m_fPanafallSplitPerc); }
+            //set { 
+            //    m_nPanafallSplitBarPosY = value;
+            //}
         }
 
         private static int cw_pitch = 600;
@@ -2037,8 +2209,8 @@ namespace PowerSDR
 
                 //  directx_render_type = RenderType.HARDWARE;
                 device.SetRenderState(RenderState.AlphaBlendEnable, true);
-                device.SetRenderState(RenderState.SourceBlend, SlimDX.Direct3D9.Blend.SourceAlpha);
-                device.SetRenderState(RenderState.DestinationBlend, SlimDX.Direct3D9.Blend.DestinationAlpha);
+                device.SetRenderState(RenderState.SourceBlend, SharpDX.Direct3D9.Blend.SourceAlpha);
+                device.SetRenderState(RenderState.DestinationBlend, SharpDX.Direct3D9.Blend.DestinationAlpha);
                 device.SetRenderState(RenderState.Lighting, false);
                 // device.SetRenderState(RenderState.AntialiasedLineEnable, true);
 
@@ -2068,12 +2240,12 @@ namespace PowerSDR
                 waterfall_rect = new Rectangle(0, 0, waterfall_target.Width, waterfall_target.Height);
                 backbuf = waterfall_dx_device.GetBackBuffer(0, 0);
 
-                panadapter_font = new SlimDX.Direct3D9.Font(device, pan_font);
+                panadapter_font = new SharpDX.Direct3D9.Font(device, pan_font);
 
 
                 Panadapter_Sprite = null;
                 WaterfallTexture = new Texture(waterfall_dx_device, waterfall_target.Width, waterfall_target.Height, 0,
-                    Usage.None, Format.X8R8G8B8, Pool.Managed);
+                    Usage.None, SharpDX.Direct3D9.Format.X8R8G8B8, Pool.Managed);
                 Waterfall_texture_size.Width = waterfall_target.Width;
                 Waterfall_texture_size.Height = waterfall_target.Height;
                 Waterfall_Sprite = new Sprite(waterfall_dx_device);
@@ -2084,16 +2256,16 @@ namespace PowerSDR
                 // if (Waterfall_Event == null)
                 //    Waterfall_Event = new AutoResetEvent(true);
 
-                WaterfallLine_vb = new VertexBuffer(waterfall_dx_device, waterfallX_data.Length * 20, Usage.WriteOnly, VertexFormat.None, Pool.Managed);
+                WaterfallLine_vb = new SharpDX.Direct3D9.VertexBuffer(waterfall_dx_device, waterfallX_data.Length * 20, SharpDX.Direct3D9.Usage.WriteOnly, VertexFormat.None, Pool.Managed);
                 WaterfallLine_verts = new Vertex[waterfall_W];
 
-                PanLine_vb = new VertexBuffer(device, panadapterX_data.Length * 20, Usage.WriteOnly, VertexFormat.None, Pool.Managed);
-                PanLine_vb_fill = new VertexBuffer(device, W * 2 * 20, Usage.WriteOnly, VertexFormat.None, Pool.Managed);
+                PanLine_vb = new SharpDX.Direct3D9.VertexBuffer(device, panadapterX_data.Length * 20, SharpDX.Direct3D9.Usage.WriteOnly, VertexFormat.None, Pool.Managed);
+                PanLine_vb_fill = new SharpDX.Direct3D9.VertexBuffer(device, W * 2 * 20, SharpDX.Direct3D9.Usage.WriteOnly, VertexFormat.None, Pool.Managed);
                 PanLine_verts = new Vertex[W];
                 PanLine_verts_fill = new Vertex[W * 2];
 
-                PanLine_bottom_vb = new VertexBuffer(device, panadapterX_data_bottom.Length * 20, Usage.WriteOnly, VertexFormat.None, Pool.Managed);
-                PanLine_bottom_vb_fill = new VertexBuffer(device, W * 2 * 20, Usage.WriteOnly, VertexFormat.None, Pool.Managed);
+                PanLine_bottom_vb = new SharpDX.Direct3D9.VertexBuffer(device, panadapterX_data_bottom.Length * 20, SharpDX.Direct3D9.Usage.WriteOnly, VertexFormat.None, Pool.Managed);
+                PanLine_bottom_vb_fill = new SharpDX.Direct3D9.VertexBuffer(device, W * 2 * 20, SharpDX.Direct3D9.Usage.WriteOnly, VertexFormat.None, Pool.Managed);
                 PanLine_bottom_verts = new Vertex[W];
                 PanLine_bottom_verts_fill = new Vertex[W * 2];
 
@@ -2105,12 +2277,12 @@ namespace PowerSDR
                 // else if ((current_display_mode == DisplayMode.PHASE) || (current_display_mode == DisplayMode.PHASE2))
                 {
                     Phase_verts = new Vertex[PhaseNumPts * 2];
-                    Phase_vb = new VertexBuffer(device, phase_num_pts * 2 * 20, Usage.WriteOnly, VertexFormat.None, Pool.Managed);
+                    Phase_vb = new SharpDX.Direct3D9.VertexBuffer(device, phase_num_pts * 2 * 20, Usage.WriteOnly, VertexFormat.None, Pool.Managed);
                 }
                 //  else if (current_display_mode == DisplayMode.HISTOGRAM)
                 {
                     HistogramLine_verts = new Vertex[W * 6];
-                    Histogram_vb = new VertexBuffer(device, W * 4 * 20, Usage.WriteOnly, VertexFormat.None, Pool.Managed);
+                    Histogram_vb = new SharpDX.Direct3D9.VertexBuffer(device, W * 4 * 20, Usage.WriteOnly, VertexFormat.None, Pool.Managed);
                 }
 
                 // panadapter_verts = new Vector2[W];
@@ -2908,20 +3080,20 @@ namespace PowerSDR
         private static void RenderRectangle(Device dev, DXRectangle rect, Color color)
         {
             Vertex[] verts = new Vertex[4];
-            var vb = new VertexBuffer(dev, 4 * Marshal.SizeOf(typeof(Vertex)), Usage.WriteOnly, VertexFormat.None, Pool.Managed);
+            var vb = new VertexBuffer(dev, 4 * Marshal.SizeOf(typeof(Vertex)), SharpDX.Direct3D9.Usage.WriteOnly, VertexFormat.None, Pool.Managed);
 
             verts[0] = new Vertex();
             verts[0].Color = color.ToArgb();
-            verts[0].Position = new Vector4(rect.x1, rect.y1, 0.0f, 0.0f);
+            verts[0].Position = new SharpDX.Vector4(rect.x1, rect.y1, 0.0f, 0.0f);
             verts[1] = new Vertex();
             verts[1].Color = color.ToArgb();
-            verts[1].Position = new Vector4(rect.x2, rect.y2, 0.0f, 0.0f);
+            verts[1].Position = new SharpDX.Vector4(rect.x2, rect.y2, 0.0f, 0.0f);
             verts[2] = new Vertex();
             verts[2].Color = color.ToArgb();
-            verts[2].Position = new Vector4(rect.x3, rect.y3, 0.0f, 0.0f);
+            verts[2].Position = new SharpDX.Vector4(rect.x3, rect.y3, 0.0f, 0.0f);
             verts[3] = new Vertex();
             verts[3].Color = color.ToArgb();
-            verts[3].Position = new Vector4(rect.x4, rect.y4, 0.0f, 0.0f);
+            verts[3].Position = new SharpDX.Vector4(rect.x4, rect.y4, 0.0f, 0.0f);
 
             vb.Lock(0, 0, LockFlags.None).WriteRange(verts, 0, 4);
             vb.Unlock();
@@ -2931,13 +3103,13 @@ namespace PowerSDR
             vb.Dispose();
         }
 
-        private static void RenderVerticalLines(Device dev, VertexBuffer vertex, int count)         // yt7pwr
+        private static void RenderVerticalLines(Device dev, SharpDX.Direct2D1.VertexBuffer vertex, int count)         // yt7pwr
         {
             dev.SetStreamSource(0, vertex, 0, 20);
             dev.DrawPrimitives(PrimitiveType.LineList, 0, count);
         }
 
-        private static void RenderHorizontalLines(Device dev, VertexBuffer vertex, int count)        // yt7pwr
+        private static void RenderHorizontalLines(Device dev, SharpDX.Direct2D1.VertexBuffer vertex, int count)        // yt7pwr
         {
             dev.SetStreamSource(0, vertex, 0, 20);
             dev.DrawPrimitives(PrimitiveType.LineList, 0, count);
@@ -2945,11 +3117,11 @@ namespace PowerSDR
 
         private static void RenderVerticalLine(Device dev, int x, int y, Color color)                // yt7pwr
         {
-            var vb = new VertexBuffer(dev, 2 * Marshal.SizeOf(typeof(Vertex)), Usage.WriteOnly, VertexFormat.None, Pool.Managed);
+            var vb = new SharpDX.Direct3D9.VertexBuffer(dev, 2 * Marshal.SizeOf(typeof(Vertex)), Usage.WriteOnly, VertexFormat.None, Pool.Managed);
 
             vb.Lock(0, 0, LockFlags.None).WriteRange(new[] {
-                new Vertex() { Color = color.ToArgb(), Position = new Vector4((float)x, (float)(top_size), 0.0f, 0.0f) },
-                new Vertex() { Color = color.ToArgb(), Position = new Vector4((float)x, (float)y, 0.0f, 0.0f) }
+                new Vertex() { Color = color.ToArgb(), Position = new SharpDX.Vector4((float)x, (float)(top_size), 0.0f, 0.0f) },
+                new Vertex() { Color = color.ToArgb(), Position = new SharpDX.Vector4((float)x, (float)y, 0.0f, 0.0f) }
                  });
             vb.Unlock();
 
@@ -2961,11 +3133,11 @@ namespace PowerSDR
 
         private static void RenderVerticalLine(Device dev, int x1, int y1, int x2, int y2, Color color)
         {
-            var vb = new VertexBuffer(dev, 2 * Marshal.SizeOf(typeof(Vertex)), Usage.WriteOnly, VertexFormat.None, Pool.Managed);
+            var vb = new SharpDX.Direct3D9.VertexBuffer(dev, 2 * Marshal.SizeOf(typeof(Vertex)), Usage.WriteOnly, VertexFormat.None, Pool.Managed);
 
             vb.Lock(0, 0, LockFlags.None).WriteRange(new[] {
-                new Vertex() { Color = color.ToArgb(), Position = new Vector4((float)x1, (float)y1, 0.0f, 0.0f) },
-                new Vertex() { Color = color.ToArgb(), Position = new Vector4((float)x2, (float)y2, 0.0f, 0.0f) }
+                new Vertex() { Color = color.ToArgb(), Position = new SharpDX.Vector4((float)x1, (float)y1, 0.0f, 0.0f) },
+                new Vertex() { Color = color.ToArgb(), Position = new SharpDX.Vector4((float)x2, (float)y2, 0.0f, 0.0f) }
                  });
             vb.Unlock();
 
@@ -2977,11 +3149,11 @@ namespace PowerSDR
 
         private static void RenderHorizontalLine(Device dev, int x, int y, Color color)              // yt7pwr
         {
-            var vb = new VertexBuffer(dev, 2 * Marshal.SizeOf(typeof(Vertex)), Usage.WriteOnly, VertexFormat.None, Pool.Managed);
+            var vb = new SharpDX.Direct3D9.VertexBuffer(dev, 2 * Marshal.SizeOf(typeof(Vertex)), Usage.WriteOnly, VertexFormat.None, Pool.Managed);
 
             vb.Lock(0, 0, LockFlags.None).WriteRange(new[] {
-                new Vertex() { Color = color.ToArgb(), Position = new Vector4((float)x, (float)y, 0.0f, 0.0f) },
-                new Vertex() { Color = color.ToArgb(), Position = new Vector4((float)W, (float)y, 0.0f, 0.0f) }
+                new Vertex() { Color = color.ToArgb(), Position = new SharpDX.Vector4((float)x, (float)y, 0.0f, 0.0f) },
+                new Vertex() { Color = color.ToArgb(), Position = new SharpDX.Vector4((float)W, (float)y, 0.0f, 0.0f) }
                  });
             vb.Unlock();
 
@@ -2993,11 +3165,11 @@ namespace PowerSDR
 
         private static void RenderHorizontalLine(Device dev, int x1, int y1, int x2, int y2, Color color)              // yt7pwr
         {
-            var vb = new VertexBuffer(dev, 2 * Marshal.SizeOf(typeof(Vertex)), Usage.WriteOnly, VertexFormat.None, Pool.Managed);
+            var vb = new SharpDX.Direct3D9.VertexBuffer(dev, 2 * Marshal.SizeOf(typeof(Vertex)), SharpDX.Direct3D9.Usage.WriteOnly, VertexFormat.None, Pool.Managed);
 
             vb.Lock(0, 0, LockFlags.None).WriteRange(new[] {
-                new Vertex() { Color = color.ToArgb(), Position = new Vector4((float)x1, (float)y1, 0.0f, 0.0f) },
-                new Vertex() { Color = color.ToArgb(), Position = new Vector4((float)x2, (float)y2, 0.0f, 0.0f) }
+                new Vertex() { Color = color.ToArgb(), Position = new SharpDX.Vector4((float)x1, (float)y1, 0.0f, 0.0f) },
+                new Vertex() { Color = color.ToArgb(), Position = new SharpDX.Vector4((float)x2, (float)y2, 0.0f, 0.0f) }
                  });
             vb.Unlock();
 
@@ -3020,11 +3192,11 @@ namespace PowerSDR
                     {
                         PanLine_bottom_verts_fill[i] = new Vertex();
                         PanLine_bottom_verts_fill[i].Color = pan_fill_color.ToArgb();
-                        PanLine_bottom_verts_fill[i].Position = new Vector4(i / 2, panadapterX_data_bottom[j] + H, 0.0f, 0.0f);
+                        PanLine_bottom_verts_fill[i].Position = new SharpDX.Vector4(i / 2, panadapterX_data_bottom[j] + H, 0.0f, 0.0f);
 
                         PanLine_bottom_verts_fill[i + 1] = new Vertex();
                         PanLine_bottom_verts_fill[i + 1].Color = pan_fill_color.ToArgb();
-                        PanLine_bottom_verts_fill[i + 1].Position = new Vector4(i / 2, H + H, 0.0f, 0.0f);
+                        PanLine_bottom_verts_fill[i + 1].Position = new SharpDX.Vector4(i / 2, H + H, 0.0f, 0.0f);
                         i++;
                         j++;
                     }
@@ -3041,11 +3213,11 @@ namespace PowerSDR
                     {
                         PanLine_verts_fill[i] = new Vertex();
                         PanLine_verts_fill[i].Color = pan_fill_color.ToArgb();
-                        PanLine_verts_fill[i].Position = new Vector4(i / 2, panadapterX_data[j], 0.0f, 0.0f);
+                        PanLine_verts_fill[i].Position = new SharpDX.Vector4(i / 2, panadapterX_data[j], 0.0f, 0.0f);
 
                         PanLine_verts_fill[i + 1] = new Vertex();
                         PanLine_verts_fill[i + 1].Color = pan_fill_color.ToArgb();
-                        PanLine_verts_fill[i + 1].Position = new Vector4(i / 2, H, 0.0f, 0.0f);
+                        PanLine_verts_fill[i + 1].Position = new SharpDX.Vector4(i / 2, H, 0.0f, 0.0f);
                         i++;
                         j++;
                     }
@@ -3065,7 +3237,7 @@ namespace PowerSDR
                     PanLine_bottom_verts[i] = new Vertex();
                     if (mox) PanLine_bottom_verts[i].Color = tx_data_line_color.ToArgb();
                     else PanLine_bottom_verts[i].Color = data_line_color.ToArgb();
-                    PanLine_bottom_verts[i].Position = new Vector4(i, panadapterX_data_bottom[i] + H, 0.0f, 0.0f);
+                    PanLine_bottom_verts[i].Position = new SharpDX.Vector4(i, panadapterX_data_bottom[i] + H, 0.0f, 0.0f);
                 }
 
                 PanLine_bottom_vb.Lock(0, 0, LockFlags.None).WriteRange(PanLine_bottom_verts, 0, W);
@@ -3081,7 +3253,7 @@ namespace PowerSDR
                     PanLine_verts[i] = new Vertex();
                     if (mox) PanLine_verts[i].Color = tx_data_line_color.ToArgb();
                     else PanLine_verts[i].Color = data_line_color.ToArgb();
-                    PanLine_verts[i].Position = new Vector4(i, panadapterX_data[i], 0.0f, 0.0f);
+                    PanLine_verts[i].Position = new SharpDX.Vector4(i, panadapterX_data[i], 0.0f, 0.0f);
                 }
 
                 PanLine_vb.Lock(0, 0, LockFlags.None).WriteRange(PanLine_verts, 0, W);
@@ -3288,12 +3460,12 @@ namespace PowerSDR
                             WaterfallTexture.UnlockRectangle(0);
                             waterfall_dx_device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, display_background_color.ToArgb(), 0.0f, 0);
                             Waterfall_Sprite.Begin(SpriteFlags.AlphaBlend);
-                            Waterfall_Sprite.Draw(WaterfallTexture, Waterfall_texture_size, (Color4)Color.White);
+                            Waterfall_Sprite.Draw(WaterfallTexture, Waterfall_texture_size, (SharpDX.Color4)Color.White);
                             Waterfall_Sprite.End();
                             waterfall_dx_device.BeginScene();
                             device.SetRenderState(RenderState.AlphaBlendEnable, true);
-                            device.SetRenderState(RenderState.SourceBlend, SlimDX.Direct3D9.Blend.SourceAlpha);
-                            device.SetRenderState(RenderState.DestinationBlend, SlimDX.Direct3D9.Blend.DestinationAlpha);
+                            device.SetRenderState(RenderState.SourceBlend, SharpDX.Direct3D9.Blend.SourceAlpha);
+                            device.SetRenderState(RenderState.DestinationBlend, SharpDX.Direct3D9.Blend.DestinationAlpha);
                             RenderVerticalLine(waterfall_dx_device, 0, 0, Color.Black);
                             waterfall_dx_device.EndScene();
                             waterfall_dx_device.Present();
@@ -3713,7 +3885,7 @@ namespace PowerSDR
                 // }
                 //if (console.HighSWR)
                 // {
-                // SlimDX.Direct3D9.Font high_swr_font = new SlimDX.Direct3D9.Font(device,
+                // SharpDX.Direct3D9.Font high_swr_font = new SharpDX.Direct3D9.Font(device,
                 // new System.Drawing.Font("Arial", 14.0f, FontStyle.Bold));
                 //  high_swr_font.DrawString(Panadapter_Sprite, string.Format("High SWR"),
                 //   new Rectangle(40, 20, 0, 0), DrawTextFormat.NoClip, Color.Red);
@@ -4130,7 +4302,7 @@ namespace PowerSDR
             if (bottom)
             {
                 if (VerLines_bottom_vb == null || f_steps_bottom_old != f_steps_bottom)
-                    VerLines_bottom_vb = new VertexBuffer(device,
+                    VerLines_bottom_vb = new SharpDX.Direct3D9.VertexBuffer(device,
                         61 * vertexsize2x,
                         Usage.WriteOnly,
                         VertexFormat.None,
@@ -4146,9 +4318,9 @@ namespace PowerSDR
                   } */
 
                 if (HorLines_bottom_vb == null || h_steps_bottom_old != h_steps_bottom)
-                    HorLines_bottom_vb = new VertexBuffer(device,
+                    HorLines_bottom_vb = new SharpDX.Direct3D9.VertexBuffer(device,
                         h_steps * vertexsize2x,
-                        Usage.WriteOnly,
+                        SharpDX.Direct3D9.Usage.WriteOnly,
                         VertexFormat.None,
                         Pool.Managed);
                 if (vertical_bottom_label == null)
@@ -4161,15 +4333,15 @@ namespace PowerSDR
             else
             {
                 if (VerLines_vb == null || f_steps_top_old != f_steps_top)
-                    VerLines_vb = new VertexBuffer(device,
+                    VerLines_vb = new SharpDX.Direct3D9.VertexBuffer(device,
                          61 * vertexsize2x,
-                         Usage.WriteOnly,
+                         SharpDX.Direct3D9.Usage.WriteOnly,
                          VertexFormat.None,
                          Pool.Managed);
                 if (HorLines_vb == null || h_steps_top_old != h_steps_top)
-                    HorLines_vb = new VertexBuffer(device,
+                    HorLines_vb = new SharpDX.Direct3D9.VertexBuffer(device,
                         h_steps * vertexsize2x,
-                        Usage.WriteOnly,
+                        SharpDX.Direct3D9.Usage.WriteOnly,
                         VertexFormat.None,
                         Pool.Managed);
                 if (vertical_label == null)
@@ -4196,8 +4368,8 @@ namespace PowerSDR
                 {
                     VerLines_bottom_vb.Lock(loop * 40, vertexsize2x, LockFlags.None).WriteRange(new[] 
                     {
-                        new Vertex() { Color = grid_color.ToArgb(), Position = new Vector4((float)vgrid, (float)H + top_size, 0.0f, 0.0f) },
-                        new Vertex() { Color = grid_color.ToArgb(), Position = new Vector4((float)vgrid, (float)H + H, 0.0f, 0.0f) },
+                        new Vertex() { Color = grid_color.ToArgb(), Position = new SharpDX.Vector4((float)vgrid, (float)H + top_size, 0.0f, 0.0f) },
+                        new Vertex() { Color = grid_color.ToArgb(), Position = new SharpDX.Vector4((float)vgrid, (float)H + H, 0.0f, 0.0f) },
                     });
                     VerLines_bottom_vb.Unlock();
 
@@ -4207,8 +4379,8 @@ namespace PowerSDR
                 {
                     VerLines_vb.Lock(loop * 40, vertexsize2x, LockFlags.None).WriteRange(new[] 
                     {
-                        new Vertex() { Color = grid_color.ToArgb(), Position = new Vector4((float)vgrid, (float)top_size, 0.0f, 0.0f) },
-                        new Vertex() { Color = grid_color.ToArgb(), Position = new Vector4((float)vgrid, (float)H, 0.0f, 0.0f) },
+                        new Vertex() { Color = grid_color.ToArgb(), Position = new SharpDX.Vector4((float)vgrid, (float)top_size, 0.0f, 0.0f) },
+                        new Vertex() { Color = grid_color.ToArgb(), Position = new SharpDX.Vector4((float)vgrid, (float)H, 0.0f, 0.0f) },
                     });
                     VerLines_vb.Unlock();
 
@@ -4361,8 +4533,8 @@ namespace PowerSDR
                     {
                         VerLines_bottom_vb.Lock(loop * 40, vertexsize2x, LockFlags.None).WriteRange(new[] 
                         {
-                        new Vertex() { Color = band_edge_color.ToArgb(), Position = new Vector4((float)vgrid, (float)H + top_size, 0.0f, 0.0f) },
-                        new Vertex() { Color = band_edge_color.ToArgb(), Position = new Vector4((float)vgrid, (float)H + H, 0.0f, 0.0f) },
+                        new Vertex() { Color = band_edge_color.ToArgb(), Position = new SharpDX.Vector4((float)vgrid, (float)H + top_size, 0.0f, 0.0f) },
+                        new Vertex() { Color = band_edge_color.ToArgb(), Position = new SharpDX.Vector4((float)vgrid, (float)H + H, 0.0f, 0.0f) },
                             });
                         VerLines_bottom_vb.Unlock();
 
@@ -4372,8 +4544,8 @@ namespace PowerSDR
                     {
                         VerLines_vb.Lock(loop * 40, vertexsize2x, LockFlags.None).WriteRange(new[] 
                         {
-                        new Vertex() { Color = band_edge_color.ToArgb(), Position = new Vector4((float)vgrid, (float)top_size, 0.0f, 0.0f) },
-                        new Vertex() { Color = band_edge_color.ToArgb(), Position = new Vector4((float)vgrid, (float)H, 0.0f, 0.0f) },
+                        new Vertex() { Color = band_edge_color.ToArgb(), Position = new SharpDX.Vector4((float)vgrid, (float)top_size, 0.0f, 0.0f) },
+                        new Vertex() { Color = band_edge_color.ToArgb(), Position = new SharpDX.Vector4((float)vgrid, (float)H, 0.0f, 0.0f) },
                             });
                         VerLines_vb.Unlock();
 
@@ -4481,8 +4653,8 @@ namespace PowerSDR
                     {
                         VerLines_bottom_vb.Lock((loop + j) * 40, vertexsize2x, LockFlags.None).WriteRange(new[] 
                         {
-                       new Vertex() { Color = grid_pen_dark.ToArgb(), Position = new Vector4(x3, (float)H + top_size, 0.0f, 0.0f) },
-                       new Vertex() { Color = grid_pen_dark.ToArgb(), Position = new Vector4(x3, (float)H + H, 0.0f, 0.0f) },
+                       new Vertex() { Color = grid_pen_dark.ToArgb(), Position = new SharpDX.Vector4(x3, (float)H + top_size, 0.0f, 0.0f) },
+                       new Vertex() { Color = grid_pen_dark.ToArgb(), Position = new SharpDX.Vector4(x3, (float)H + H, 0.0f, 0.0f) },
                            });
                         VerLines_bottom_vb.Unlock();
 
@@ -4492,8 +4664,8 @@ namespace PowerSDR
                     {
                         VerLines_vb.Lock((loop + j) * 40, vertexsize2x, LockFlags.None).WriteRange(new[] 
                         {
-                       new Vertex() { Color = grid_pen_dark.ToArgb(), Position = new Vector4(x3, (float)top_size, 0.0f, 0.0f) },
-                       new Vertex() { Color = grid_pen_dark.ToArgb(), Position = new Vector4(x3, (float)H, 0.0f, 0.0f) },
+                       new Vertex() { Color = grid_pen_dark.ToArgb(), Position = new SharpDX.Vector4(x3, (float)top_size, 0.0f, 0.0f) },
+                       new Vertex() { Color = grid_pen_dark.ToArgb(), Position = new SharpDX.Vector4(x3, (float)H, 0.0f, 0.0f) },
                             });
                         VerLines_vb.Unlock();
 
@@ -4524,8 +4696,8 @@ namespace PowerSDR
                 {
                     VerLines_bottom_vb.Lock((j + loop) * 40, vertexsize2x, LockFlags.None).WriteRange(new[] 
                     {
-                        new Vertex() { Color = grid_pen_dark.ToArgb(), Position = new Vector4((float)x3, (float)H + top_size, 0.0f, 0.0f) },
-                        new Vertex() { Color = grid_pen_dark.ToArgb(), Position = new Vector4((float)x3, (float)H + H, 0.0f, 0.0f) },
+                        new Vertex() { Color = grid_pen_dark.ToArgb(), Position = new SharpDX.Vector4((float)x3, (float)H + top_size, 0.0f, 0.0f) },
+                        new Vertex() { Color = grid_pen_dark.ToArgb(), Position = new SharpDX.Vector4((float)x3, (float)H + H, 0.0f, 0.0f) },
                     });
                     VerLines_bottom_vb.Unlock();
 
@@ -4535,8 +4707,8 @@ namespace PowerSDR
                 {
                     VerLines_vb.Lock((j + loop) * 40, vertexsize2x, LockFlags.None).WriteRange(new[] 
                     {
-                        new Vertex() { Color = grid_pen_dark.ToArgb(), Position = new Vector4((float)x3, (float)top_size, 0.0f, 0.0f) },
-                        new Vertex() { Color = grid_pen_dark.ToArgb(), Position = new Vector4((float)x3, (float)H, 0.0f, 0.0f) },
+                        new Vertex() { Color = grid_pen_dark.ToArgb(), Position = new SharpDX.Vector4((float)x3, (float)top_size, 0.0f, 0.0f) },
+                        new Vertex() { Color = grid_pen_dark.ToArgb(), Position = new SharpDX.Vector4((float)x3, (float)H, 0.0f, 0.0f) },
                      });
                     VerLines_vb.Unlock();
 
@@ -4594,20 +4766,20 @@ namespace PowerSDR
             {
                 VerLines_bottom_vb.Lock(loop * 40, vertexsize4x, LockFlags.None).WriteRange(new[] 
                 {    // clear first!
-                        new Vertex() { Color = band_edge_color.ToArgb(), Position = new Vector4(0.0f, 0.0f, 0.0f, 0.0f) },
-                        new Vertex() { Color = band_edge_color.ToArgb(), Position = new Vector4(0.0f, 0.0f, 0.0f, 0.0f) },
-                        new Vertex() { Color = band_edge_color.ToArgb(), Position = new Vector4(0.0f, 0.0f, 0.0f, 0.0f) },
-                        new Vertex() { Color = band_edge_color.ToArgb(), Position = new Vector4(0.0f, 0.0f, 0.0f, 0.0f) },
+                        new Vertex() { Color = band_edge_color.ToArgb(), Position = new SharpDX.Vector4(0.0f, 0.0f, 0.0f, 0.0f) },
+                        new Vertex() { Color = band_edge_color.ToArgb(), Position = new SharpDX.Vector4(0.0f, 0.0f, 0.0f, 0.0f) },
+                        new Vertex() { Color = band_edge_color.ToArgb(), Position = new SharpDX.Vector4(0.0f, 0.0f, 0.0f, 0.0f) },
+                        new Vertex() { Color = band_edge_color.ToArgb(), Position = new SharpDX.Vector4(0.0f, 0.0f, 0.0f, 0.0f) },
                  });
             }
             else
             {
                 VerLines_vb.Lock(loop * 40, vertexsize4x, LockFlags.None).WriteRange(new[] 
                 {    // clear first!
-                        new Vertex() { Color = band_edge_color.ToArgb(), Position = new Vector4(0.0f, 0.0f, 0.0f, 0.0f) },
-                        new Vertex() { Color = band_edge_color.ToArgb(), Position = new Vector4(0.0f, 0.0f, 0.0f, 0.0f) },
-                        new Vertex() { Color = band_edge_color.ToArgb(), Position = new Vector4(0.0f, 0.0f, 0.0f, 0.0f) },
-                        new Vertex() { Color = band_edge_color.ToArgb(), Position = new Vector4(0.0f, 0.0f, 0.0f, 0.0f) },
+                        new Vertex() { Color = band_edge_color.ToArgb(), Position = new SharpDX.Vector4(0.0f, 0.0f, 0.0f, 0.0f) },
+                        new Vertex() { Color = band_edge_color.ToArgb(), Position = new SharpDX.Vector4(0.0f, 0.0f, 0.0f, 0.0f) },
+                        new Vertex() { Color = band_edge_color.ToArgb(), Position = new SharpDX.Vector4(0.0f, 0.0f, 0.0f, 0.0f) },
+                        new Vertex() { Color = band_edge_color.ToArgb(), Position = new SharpDX.Vector4(0.0f, 0.0f, 0.0f, 0.0f) },
                 });
             }
             //#endif
@@ -4627,8 +4799,8 @@ namespace PowerSDR
                         {
                             VerLines_bottom_vb.Lock(loop * 40, vertexsize2x, LockFlags.None).WriteRange(new[] 
                             {
-                               new Vertex() { Color = band_edge_color.ToArgb(), Position = new Vector4((float)temp_vline, (float)H + top_size, 0.0f, 0.0f) },
-                               new Vertex() { Color = band_edge_color.ToArgb(), Position = new Vector4((float)temp_vline, (float)H + H, 0.0f, 0.0f) },
+                               new Vertex() { Color = band_edge_color.ToArgb(), Position = new SharpDX.Vector4((float)temp_vline, (float)H + top_size, 0.0f, 0.0f) },
+                               new Vertex() { Color = band_edge_color.ToArgb(), Position = new SharpDX.Vector4((float)temp_vline, (float)H + H, 0.0f, 0.0f) },
                             });
                             VerLines_bottom_vb.Unlock();
 
@@ -4638,8 +4810,8 @@ namespace PowerSDR
                         {
                             VerLines_vb.Lock(loop * 40, vertexsize2x, LockFlags.None).WriteRange(new[] 
                             {
-                                new Vertex() { Color = band_edge_color.ToArgb(), Position = new Vector4((float)temp_vline, (float)top_size, 0.0f, 0.0f) },
-                                new Vertex() { Color = band_edge_color.ToArgb(), Position = new Vector4((float)temp_vline, (float)H, 0.0f, 0.0f) },
+                                new Vertex() { Color = band_edge_color.ToArgb(), Position = new SharpDX.Vector4((float)temp_vline, (float)top_size, 0.0f, 0.0f) },
+                                new Vertex() { Color = band_edge_color.ToArgb(), Position = new SharpDX.Vector4((float)temp_vline, (float)H, 0.0f, 0.0f) },
                             });
                             VerLines_vb.Unlock();
 
@@ -4653,8 +4825,8 @@ namespace PowerSDR
                         {
                             VerLines_bottom_vb.Lock(loop + 1 * 40, vertexsize2x, LockFlags.None).WriteRange(new[] 
                             {
-                                new Vertex() { Color = band_edge_color.ToArgb(), Position = new Vector4((float)temp_vline, (float)H + top_size, 0.0f, 0.0f) },
-                                new Vertex() { Color = band_edge_color.ToArgb(), Position = new Vector4((float)temp_vline, (float)H + H, 0.0f, 0.0f) },
+                                new Vertex() { Color = band_edge_color.ToArgb(), Position = new SharpDX.Vector4((float)temp_vline, (float)H + top_size, 0.0f, 0.0f) },
+                                new Vertex() { Color = band_edge_color.ToArgb(), Position = new SharpDX.Vector4((float)temp_vline, (float)H + H, 0.0f, 0.0f) },
                             });
                             VerLines_bottom_vb.Unlock();
 
@@ -4664,8 +4836,8 @@ namespace PowerSDR
                         {
                             VerLines_vb.Lock(loop + 1 * 40, vertexsize2x, LockFlags.None).WriteRange(new[] 
                             {
-                                new Vertex() { Color = band_edge_color.ToArgb(), Position = new Vector4((float)temp_vline, (float)top_size, 0.0f, 0.0f) },
-                                new Vertex() { Color = band_edge_color.ToArgb(), Position = new Vector4((float)temp_vline, (float)H, 0.0f, 0.0f) },
+                                new Vertex() { Color = band_edge_color.ToArgb(), Position = new SharpDX.Vector4((float)temp_vline, (float)top_size, 0.0f, 0.0f) },
+                                new Vertex() { Color = band_edge_color.ToArgb(), Position = new SharpDX.Vector4((float)temp_vline, (float)H, 0.0f, 0.0f) },
                             });
                             VerLines_vb.Unlock();
 
@@ -4689,8 +4861,8 @@ namespace PowerSDR
                 if (bottom)
                 {
                     HorLines_bottom_vb.Lock(i * 40, vertexsize2x, LockFlags.None).WriteRange(new[] {
-                        new Vertex() { Color = hgrid_color.ToArgb(), Position = new Vector4(0.0f, (float)H + y, 0.0f, 0.0f) },
-                        new Vertex() { Color = hgrid_color.ToArgb(), Position = new Vector4((float)W, (float)H + y, 0.0f, 0.0f) },
+                        new Vertex() { Color = hgrid_color.ToArgb(), Position = new SharpDX.Vector4(0.0f, (float)H + y, 0.0f, 0.0f) },
+                        new Vertex() { Color = hgrid_color.ToArgb(), Position = new SharpDX.Vector4((float)W, (float)H + y, 0.0f, 0.0f) },
                     });
                     HorLines_bottom_vb.Unlock();
 
@@ -4699,8 +4871,8 @@ namespace PowerSDR
                 else
                 {
                     HorLines_vb.Lock(i * 40, vertexsize2x, LockFlags.None).WriteRange(new[] {
-                        new Vertex() { Color = hgrid_color.ToArgb(), Position = new Vector4(0.0f, (float)y, 0.0f, 0.0f) },
-                        new Vertex() { Color = hgrid_color.ToArgb(), Position = new Vector4((float)W, (float)y, 0.0f, 0.0f) },
+                        new Vertex() { Color = hgrid_color.ToArgb(), Position = new SharpDX.Vector4(0.0f, (float)y, 0.0f, 0.0f) },
+                        new Vertex() { Color = hgrid_color.ToArgb(), Position = new SharpDX.Vector4((float)W, (float)y, 0.0f, 0.0f) },
                     });
                     HorLines_vb.Unlock();
 
@@ -6043,16 +6215,16 @@ namespace PowerSDR
                 {
                     HistogramLine_verts[i] = new Vertex();
                     HistogramLine_verts[i].Color = histogram_verts[j].color.ToArgb();
-                    HistogramLine_verts[i].Position = new Vector4(j, points[j].Y, 0.0f, 0.0f);
+                    HistogramLine_verts[i].Position = new SharpDX.Vector4(j, points[j].Y, 0.0f, 0.0f);
                     HistogramLine_verts[i + 1] = new Vertex();
                     HistogramLine_verts[i + 1].Color = histogram_verts[j].color.ToArgb();
-                    HistogramLine_verts[i + 1].Position = new Vector4(j, histogram_data[j], 0.0f, 0.0f);
+                    HistogramLine_verts[i + 1].Position = new SharpDX.Vector4(j, histogram_data[j], 0.0f, 0.0f);
                     HistogramLine_verts[i + 2] = new Vertex();
                     HistogramLine_verts[i + 2].Color = histogram_verts[j].color.ToArgb();
-                    HistogramLine_verts[i + 2].Position = new Vector4(j + 1, points[j].Y, 0.0f, 0.0f);
+                    HistogramLine_verts[i + 2].Position = new SharpDX.Vector4(j + 1, points[j].Y, 0.0f, 0.0f);
                     HistogramLine_verts[i + 3] = new Vertex();
                     HistogramLine_verts[i + 3].Color = histogram_verts[j].color.ToArgb();
-                    HistogramLine_verts[i + 3].Position = new Vector4(j + 1, histogram_data[j], 0.0f, 0.0f);
+                    HistogramLine_verts[i + 3].Position = new SharpDX.Vector4(j + 1, histogram_data[j], 0.0f, 0.0f);
                     i += 3;
                     j += 2;
                 }
@@ -6068,16 +6240,16 @@ namespace PowerSDR
                 {
                     HistogramLine_verts[W + i] = new Vertex();
                     HistogramLine_verts[W + i].Color = histogram_verts[W + j].color.ToArgb();
-                    HistogramLine_verts[W + i].Position = new Vector4(k, H, 0.0f, 0.0f);
+                    HistogramLine_verts[W + i].Position = new SharpDX.Vector4(k, H, 0.0f, 0.0f);
                     HistogramLine_verts[W + i + 1] = new Vertex();
                     HistogramLine_verts[W + i + 1].Color = histogram_verts[W + j].color.ToArgb();
-                    HistogramLine_verts[W + i + 1].Position = new Vector4(k, histogram_verts[W + j].Y, 0.0f, 0.0f);
+                    HistogramLine_verts[W + i + 1].Position = new SharpDX.Vector4(k, histogram_verts[W + j].Y, 0.0f, 0.0f);
                     HistogramLine_verts[W + i + 2] = new Vertex();
                     HistogramLine_verts[W + i + 2].Color = histogram_verts[W + j + 1].color.ToArgb();
-                    HistogramLine_verts[W + i + 2].Position = new Vector4(k, histogram_verts[W + j].Y, 0.0f, 0.0f);
+                    HistogramLine_verts[W + i + 2].Position = new SharpDX.Vector4(k, histogram_verts[W + j].Y, 0.0f, 0.0f);
                     HistogramLine_verts[W + i + 3] = new Vertex();
                     HistogramLine_verts[W + i + 3].Color = histogram_verts[W + j + 1].color.ToArgb();
-                    HistogramLine_verts[W + i + 3].Position = new Vector4(k, histogram_verts[W + j + 1].Y, 0.0f, 0.0f);
+                    HistogramLine_verts[W + i + 3].Position = new SharpDX.Vector4(k, histogram_verts[W + j + 1].Y, 0.0f, 0.0f);
                     i += 3;
                     j += 2;
                     k++;
@@ -6113,8 +6285,8 @@ namespace PowerSDR
                 }
                 Phase_verts[i] = new Vertex();
                 Phase_verts[i].Color = data_line_color.ToArgb();
-                Phase_verts[i].Position = new Vector4(W / 2 + x, H / 2 + y, 0.0f, 0.0f);
-                if (bottom) Phase_verts[i].Position = new Vector4(W / 2 + x, H + H / 2 + y, 0.0f, 0.0f);
+                Phase_verts[i].Position = new SharpDX.Vector4(W / 2 + x, H / 2 + y, 0.0f, 0.0f);
+                if (bottom) Phase_verts[i].Position = new SharpDX.Vector4(W / 2 + x, H + H / 2 + y, 0.0f, 0.0f);
             }
 
             Phase_vb.Lock(0, 0, LockFlags.None).WriteRange(Phase_verts, 0, phase_num_pts);
@@ -6134,7 +6306,7 @@ namespace PowerSDR
                 y = (int)(current_display_data[i * 2 + 1] * H * 0.5 * 500);
                 Phase_verts[i] = new Vertex();
                 Phase_verts[i].Color = data_line_color.ToArgb();
-                Phase_verts[i].Position = new Vector4(W * 0.5f + x, H * 0.5f + y, 0.0f, 0.0f);
+                Phase_verts[i].Position = new SharpDX.Vector4(W * 0.5f + x, H * 0.5f + y, 0.0f, 0.0f);
             }
 
             Phase_vb.Lock(0, 0, LockFlags.None).WriteRange(Phase_verts, 0, phase_num_pts);
@@ -7021,7 +7193,7 @@ namespace PowerSDR
             if (high_swr && !bottom)
                 g.DrawString("High SWR", font14, Brushes.Red, 245, 20);
         }
-
+        public static int[] holder = new int[100];                           // ke9ns add DX Spot used to allow the vertical lines to all be drawn first so the call sign text can draw over the top of it.
         static float zoom_height = 1.5f;   // Should be > 1.  H = H/zoom_height
         unsafe private static void DrawPanadapterGrid(ref Graphics g, int W, int H, int rx, bool bottom)
         {
