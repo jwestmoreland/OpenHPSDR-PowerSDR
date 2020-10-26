@@ -46,12 +46,12 @@ namespace PowerSDR
     using System.Threading.Tasks;
     using System.Windows.Forms;
     using System.Runtime.InteropServices;
-    using SlimDX;
+   using SlimDX;
     using SlimDX.Direct3D9;
     using SlimDX.Direct2D;
 
-    //using SlimDX.Windows;
-    //  using ManagedCuda;
+    using SlimDX.Windows;
+//      using ManagedCuda;
     //  using ManagedCuda.BasicTypes;
     //  using ManagedCuda.VectorTypes;
     //  using ManagedCuda.CudaFFT;
@@ -72,7 +72,7 @@ namespace PowerSDR
  //   using DashStyle = System.Drawing.Drawing2D.DashStyle;
     // SharpDX clashes -- note changes made to SlimDX vs. SharpDX --- aj6bc
  //   using AlphaMode = SlimDX.Direct2D.AlphaMode;
- //   using Device = SlimDX.Direct3D9.Device;
+    using Device = SlimDX.Direct3D9.Device;
  //   using RectangleF = SharpDX.RectangleF;
  //   using SDXPixelFormat = SlimDX.Direct2D.PixelFormat;
 
@@ -92,8 +92,9 @@ namespace PowerSDR
     using DashStyle = System.Drawing.Drawing2D.DashStyle;
     // SharpDX clashes
     using AlphaMode = SharpDX.Direct2D1.AlphaMode;
-    using Device = SharpDX.Direct3D11.Device;
-    using RectangleF = SharpDX.RectangleF;
+ //   using Device = SharpDX.Direct3D11.Device;
+ //   using Device = SlimDX.Direct3D9.Device;
+ //   using RectangleF = SharpDX.RectangleF;
     using SDXPixelFormat = SharpDX.Direct2D1.PixelFormat;
 
 
@@ -204,24 +205,24 @@ namespace PowerSDR
         public static DXRectangle Hangrect_bottom;
         // private static VertexBuffer VerLine_vb = null;
         // private static VertexBuffer HorLine_vb = null;
-        private static SharpDX.Direct2D1.VertexBuffer VerLines_vb = null;  
-        private static SharpDX.Direct2D1.VertexBuffer HorLines_vb = null;
-        private static SharpDX.Direct2D1.VertexBuffer VerLines_bottom_vb = null;
-        private static SharpDX.Direct2D1.VertexBuffer HorLines_bottom_vb = null;
-        private static SharpDX.Direct2D1.VertexBuffer PanLine_vb = null;
-        private static SharpDX.Direct2D1.VertexBuffer PanLine_vb_fill = null;
-        private static SharpDX.Direct2D1.VertexBuffer PanLine_bottom_vb = null;
-        private static SharpDX.Direct2D1.VertexBuffer PanLine_bottom_vb_fill = null;
-        private static SharpDX.Direct2D1.VertexBuffer ScopeLine_vb = null;
+        private static SlimDX.Direct3D9.VertexBuffer VerLines_vb = null;  
+        private static SlimDX.Direct3D9.VertexBuffer HorLines_vb = null;
+        private static SlimDX.Direct3D9.VertexBuffer VerLines_bottom_vb = null;
+        private static SlimDX.Direct3D9.VertexBuffer HorLines_bottom_vb = null;
+        private static SlimDX.Direct3D9.VertexBuffer PanLine_vb = null;
+        private static SlimDX.Direct3D9.VertexBuffer PanLine_vb_fill = null;
+        private static SlimDX.Direct3D9.VertexBuffer PanLine_bottom_vb = null;
+        private static SlimDX.Direct3D9.VertexBuffer PanLine_bottom_vb_fill = null;
+        private static SlimDX.Direct3D9.VertexBuffer ScopeLine_vb = null;
         private static Vertex[] PanLine_verts = null;
         private static Vertex[] PanLine_bottom_verts = null;
         private static Vertex[] ScopeLine_verts = null;
         private static Vertex[] PanLine_verts_fill = null;
         private static Vertex[] PanLine_bottom_verts_fill = null;
         private static Vertex[] Phase_verts = null;
-        private static SharpDX.Direct2D1.VertexBuffer Phase_vb = null;
+        private static SlimDX.Direct3D9.VertexBuffer Phase_vb = null;
         private static Vertex[] HistogramLine_verts = null;
-        private static SharpDX.Direct2D1.VertexBuffer Histogram_vb = null;
+        private static SlimDX.Direct3D9.VertexBuffer Histogram_vb = null;
         private static float[] panadapterX_data = null;
         private static float[] panadapterX_data_bottom = null;
         private static Point[] points = null;
@@ -239,7 +240,7 @@ namespace PowerSDR
         private static Sprite Waterfall_Sprite = null;
         private static Rectangle Waterfall_texture_size;
         // private static AutoResetEvent Waterfall_Event;
-        private static SharpDX.Direct2D1.VertexBuffer WaterfallLine_vb = null;
+        private static SlimDX.Direct3D9.VertexBuffer WaterfallLine_vb = null;
         private static Vertex[] WaterfallLine_verts = null;
         private static float[] waterfallX_data = null;
         private static Rectangle waterfall_rect;
@@ -373,12 +374,15 @@ namespace PowerSDR
                 if (!console.booting)
                 {
                     panadapter_font.Dispose();
-                    panadapter_font = new Font(device, pan_font);
+///                    panadapter_font = Font(device, pan_font);                ///***--- fixMe
                 }
             }
         }
 
         private static SlimDX.Direct3D9.Font panadapter_font = null;
+
+//        private static SharpDX.Direct2D1.Font panadapter_font = null;
+
         public static SlimDX.Direct3D9.Font PanadapterFont
         {
             get { return panadapter_font; }
@@ -649,7 +653,7 @@ namespace PowerSDR
                     }
                     
                     if (waterfall_bmp_dx2d != null) waterfall_bmp_dx2d.Dispose(); 
-                     waterfall_bmp_dx2d = new SharpDX.Direct2D1.Bitmap(d2dRenderTarget, new Size2(displayTargetWidth, /*(displayTargetHeight / scale)*/ H - 20), new BitmapProperties(new SDXPixelFormat(Format.B8G8R8A8_UNorm, AlphaMode.Premultiplied)));
+                     waterfall_bmp_dx2d = new SharpDX.Direct2D1.Bitmap(d2dRenderTarget, new Size2(displayTargetWidth, /*(displayTargetHeight / scale)*/ H - 20), new SharpDX.Direct2D1.BitmapProperties(new SDXPixelFormat(SharpDX.DXGI.Format.B8G8R8A8_UNorm, AlphaMode.Premultiplied)));
                     
                     if (tmp != null)
                     {
@@ -2102,15 +2106,18 @@ namespace PowerSDR
                         break;
                 }
 
-                PresentParameters pp = new PresentParameters();
+                SlimDX.Direct3D9.PresentParameters pp = new SlimDX.Direct3D9.PresentParameters();
                 pp.Windowed = true;
-                pp.SwapEffect = SwapEffect.Discard;
+                pp.SwapEffect = SlimDX.Direct3D9.SwapEffect.Discard;
                 pp.Multisample = MultisampleType.None;
                 pp.EnableAutoDepthStencil = true;
-                pp.AutoDepthStencilFormat = Format.D16;
-                pp.PresentFlags = PresentFlags.DiscardDepthStencil;
+ //               SharpDX.DXGI.PresentFlags.
+//                pp.AutoDepthStencilFormat = SharpDX.DXGI.Format.D16_UNorm;            // 
+                pp.PresentFlags = SlimDX.Direct3D9.PresentFlags.DiscardDepthStencil;
+ //               pp.PresentFlags = SharpDX.DXGI.PresentFlags.DoNotWait;
                 pp.PresentationInterval = PresentInterval.Default;
-                pp.BackBufferFormat = Format.X8R8G8B8;
+                pp.BackBufferFormat = SlimDX.Direct3D9.Format.X8R8G8B8;
+ //               pp.BackBufferFormat = SharpDX.DXGI.Format.B8G8R8A8_UNorm; //    Format.X8R8G8B8;
                 pp.BackBufferHeight = target.Height;
                 pp.BackBufferWidth = target.Width;
                 pp.BackBufferCount = 1;
@@ -2208,9 +2215,10 @@ namespace PowerSDR
 #endif
 
                 //  directx_render_type = RenderType.HARDWARE;
+                
                 device.SetRenderState(RenderState.AlphaBlendEnable, true);
-                device.SetRenderState(RenderState.SourceBlend, SharpDX.Direct3D9.Blend.SourceAlpha);
-                device.SetRenderState(RenderState.DestinationBlend, SharpDX.Direct3D9.Blend.DestinationAlpha);
+                device.SetRenderState(RenderState.SourceBlend, SlimDX.Direct3D9.Blend.SourceAlpha);
+                device.SetRenderState(RenderState.DestinationBlend, SlimDX.Direct3D9.Blend.DestinationAlpha);
                 device.SetRenderState(RenderState.Lighting, false);
                 // device.SetRenderState(RenderState.AntialiasedLineEnable, true);
 
@@ -2240,12 +2248,12 @@ namespace PowerSDR
                 waterfall_rect = new Rectangle(0, 0, waterfall_target.Width, waterfall_target.Height);
                 backbuf = waterfall_dx_device.GetBackBuffer(0, 0);
 
-                panadapter_font = new SharpDX.Direct3D9.Font(device, pan_font);
+                panadapter_font = new SlimDX.Direct3D9.Font(device, pan_font);
 
 
                 Panadapter_Sprite = null;
                 WaterfallTexture = new Texture(waterfall_dx_device, waterfall_target.Width, waterfall_target.Height, 0,
-                    Usage.None, SharpDX.Direct3D9.Format.X8R8G8B8, Pool.Managed);
+                    SlimDX.Direct3D9.Usage.None, SlimDX.Direct3D9.Format.X8R8G8B8, Pool.Managed);
                 Waterfall_texture_size.Width = waterfall_target.Width;
                 Waterfall_texture_size.Height = waterfall_target.Height;
                 Waterfall_Sprite = new Sprite(waterfall_dx_device);
@@ -2256,16 +2264,16 @@ namespace PowerSDR
                 // if (Waterfall_Event == null)
                 //    Waterfall_Event = new AutoResetEvent(true);
 
-                WaterfallLine_vb = new SharpDX.Direct3D9.VertexBuffer(waterfall_dx_device, waterfallX_data.Length * 20, SharpDX.Direct3D9.Usage.WriteOnly, VertexFormat.None, Pool.Managed);
+                WaterfallLine_vb = new SlimDX.Direct3D9.VertexBuffer(waterfall_dx_device, waterfallX_data.Length * 20, SlimDX.Direct3D9.Usage.WriteOnly, VertexFormat.None, Pool.Managed);
                 WaterfallLine_verts = new Vertex[waterfall_W];
 
-                PanLine_vb = new SharpDX.Direct3D9.VertexBuffer(device, panadapterX_data.Length * 20, SharpDX.Direct3D9.Usage.WriteOnly, VertexFormat.None, Pool.Managed);
-                PanLine_vb_fill = new SharpDX.Direct3D9.VertexBuffer(device, W * 2 * 20, SharpDX.Direct3D9.Usage.WriteOnly, VertexFormat.None, Pool.Managed);
+                PanLine_vb = new SlimDX.Direct3D9.VertexBuffer(device, panadapterX_data.Length * 20, SlimDX.Direct3D9.Usage.WriteOnly, VertexFormat.None, Pool.Managed);
+                PanLine_vb_fill = new SlimDX.Direct3D9.VertexBuffer(device, W * 2 * 20, SlimDX.Direct3D9.Usage.WriteOnly, VertexFormat.None, Pool.Managed);
                 PanLine_verts = new Vertex[W];
                 PanLine_verts_fill = new Vertex[W * 2];
 
-                PanLine_bottom_vb = new SharpDX.Direct3D9.VertexBuffer(device, panadapterX_data_bottom.Length * 20, SharpDX.Direct3D9.Usage.WriteOnly, VertexFormat.None, Pool.Managed);
-                PanLine_bottom_vb_fill = new SharpDX.Direct3D9.VertexBuffer(device, W * 2 * 20, SharpDX.Direct3D9.Usage.WriteOnly, VertexFormat.None, Pool.Managed);
+                PanLine_bottom_vb = new SlimDX.Direct3D9.VertexBuffer(device, panadapterX_data_bottom.Length * 20, SlimDX.Direct3D9.Usage.WriteOnly, VertexFormat.None, Pool.Managed);
+                PanLine_bottom_vb_fill = new SlimDX.Direct3D9.VertexBuffer(device, W * 2 * 20, SlimDX.Direct3D9.Usage.WriteOnly, VertexFormat.None, Pool.Managed);
                 PanLine_bottom_verts = new Vertex[W];
                 PanLine_bottom_verts_fill = new Vertex[W * 2];
 
@@ -2277,14 +2285,14 @@ namespace PowerSDR
                 // else if ((current_display_mode == DisplayMode.PHASE) || (current_display_mode == DisplayMode.PHASE2))
                 {
                     Phase_verts = new Vertex[PhaseNumPts * 2];
-                    Phase_vb = new SharpDX.Direct3D9.VertexBuffer(device, phase_num_pts * 2 * 20, Usage.WriteOnly, VertexFormat.None, Pool.Managed);
+                    Phase_vb = new SlimDX.Direct3D9.VertexBuffer(device, phase_num_pts * 2 * 20, SlimDX.Direct3D9.Usage.WriteOnly, VertexFormat.None, Pool.Managed);
                 }
                 //  else if (current_display_mode == DisplayMode.HISTOGRAM)
                 {
                     HistogramLine_verts = new Vertex[W * 6];
-                    Histogram_vb = new SharpDX.Direct3D9.VertexBuffer(device, W * 4 * 20, Usage.WriteOnly, VertexFormat.None, Pool.Managed);
+                    Histogram_vb = new SlimDX.Direct3D9.VertexBuffer(device, W * 4 * 20, SlimDX.Direct3D9.Usage.WriteOnly, VertexFormat.None, Pool.Managed);
                 }
-
+//                SlimDX.Direct3D9.Usage.
                 // panadapter_verts = new Vector2[W];
                 // panadapter_line = new Line(device);
                 // panadapter_line.Antialias = true;
@@ -3080,7 +3088,7 @@ namespace PowerSDR
         private static void RenderRectangle(Device dev, DXRectangle rect, Color color)
         {
             Vertex[] verts = new Vertex[4];
-            var vb = new VertexBuffer(dev, 4 * Marshal.SizeOf(typeof(Vertex)), SharpDX.Direct3D9.Usage.WriteOnly, VertexFormat.None, Pool.Managed);
+            var vb = new SlimDX.Direct3D9.VertexBuffer(dev, 4 * Marshal.SizeOf(typeof(Vertex)), SlimDX.Direct3D9.Usage.WriteOnly, VertexFormat.None, Pool.Managed);
 
             verts[0] = new Vertex();
             verts[0].Color = color.ToArgb();
@@ -3117,7 +3125,7 @@ namespace PowerSDR
 
         private static void RenderVerticalLine(Device dev, int x, int y, Color color)                // yt7pwr
         {
-            var vb = new SharpDX.Direct3D9.VertexBuffer(dev, 2 * Marshal.SizeOf(typeof(Vertex)), Usage.WriteOnly, VertexFormat.None, Pool.Managed);
+            var vb = new SlimDX.Direct3D9.VertexBuffer(dev, 2 * Marshal.SizeOf(typeof(Vertex)), SlimDX.Direct3D9.Usage.WriteOnly, VertexFormat.None, Pool.Managed);
 
             vb.Lock(0, 0, LockFlags.None).WriteRange(new[] {
                 new Vertex() { Color = color.ToArgb(), Position = new SharpDX.Vector4((float)x, (float)(top_size), 0.0f, 0.0f) },
@@ -3133,7 +3141,7 @@ namespace PowerSDR
 
         private static void RenderVerticalLine(Device dev, int x1, int y1, int x2, int y2, Color color)
         {
-            var vb = new SharpDX.Direct3D9.VertexBuffer(dev, 2 * Marshal.SizeOf(typeof(Vertex)), Usage.WriteOnly, VertexFormat.None, Pool.Managed);
+            var vb = new SlimDX.Direct3D9.VertexBuffer(dev, 2 * Marshal.SizeOf(typeof(Vertex)), SlimDX.Direct3D9.Usage.WriteOnly, VertexFormat.None, Pool.Managed);
 
             vb.Lock(0, 0, LockFlags.None).WriteRange(new[] {
                 new Vertex() { Color = color.ToArgb(), Position = new SharpDX.Vector4((float)x1, (float)y1, 0.0f, 0.0f) },
@@ -3149,7 +3157,7 @@ namespace PowerSDR
 
         private static void RenderHorizontalLine(Device dev, int x, int y, Color color)              // yt7pwr
         {
-            var vb = new SharpDX.Direct3D9.VertexBuffer(dev, 2 * Marshal.SizeOf(typeof(Vertex)), Usage.WriteOnly, VertexFormat.None, Pool.Managed);
+            var vb = new SlimDX.Direct3D9.VertexBuffer(dev, 2 * Marshal.SizeOf(typeof(Vertex)), SlimDX.Direct3D9.Usage.WriteOnly, VertexFormat.None, Pool.Managed);
 
             vb.Lock(0, 0, LockFlags.None).WriteRange(new[] {
                 new Vertex() { Color = color.ToArgb(), Position = new SharpDX.Vector4((float)x, (float)y, 0.0f, 0.0f) },
@@ -3165,7 +3173,7 @@ namespace PowerSDR
 
         private static void RenderHorizontalLine(Device dev, int x1, int y1, int x2, int y2, Color color)              // yt7pwr
         {
-            var vb = new SharpDX.Direct3D9.VertexBuffer(dev, 2 * Marshal.SizeOf(typeof(Vertex)), SharpDX.Direct3D9.Usage.WriteOnly, VertexFormat.None, Pool.Managed);
+            var vb = new SlimDX.Direct3D9.VertexBuffer(dev, 2 * Marshal.SizeOf(typeof(Vertex)), SlimDX.Direct3D9.Usage.WriteOnly, VertexFormat.None, Pool.Managed);
 
             vb.Lock(0, 0, LockFlags.None).WriteRange(new[] {
                 new Vertex() { Color = color.ToArgb(), Position = new SharpDX.Vector4((float)x1, (float)y1, 0.0f, 0.0f) },
@@ -3460,12 +3468,12 @@ namespace PowerSDR
                             WaterfallTexture.UnlockRectangle(0);
                             waterfall_dx_device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, display_background_color.ToArgb(), 0.0f, 0);
                             Waterfall_Sprite.Begin(SpriteFlags.AlphaBlend);
-                            Waterfall_Sprite.Draw(WaterfallTexture, Waterfall_texture_size, (SharpDX.Color4)Color.White);
+                            Waterfall_Sprite.Draw(WaterfallTexture, Waterfall_texture_size, (SlimDX.Color4)Color.White);
                             Waterfall_Sprite.End();
                             waterfall_dx_device.BeginScene();
                             device.SetRenderState(RenderState.AlphaBlendEnable, true);
-                            device.SetRenderState(RenderState.SourceBlend, SharpDX.Direct3D9.Blend.SourceAlpha);
-                            device.SetRenderState(RenderState.DestinationBlend, SharpDX.Direct3D9.Blend.DestinationAlpha);
+                            device.SetRenderState(RenderState.SourceBlend, SlimDX.Direct3D9.Blend.SourceAlpha);
+                            device.SetRenderState(RenderState.DestinationBlend, SlimDX.Direct3D9.Blend.DestinationAlpha);
                             RenderVerticalLine(waterfall_dx_device, 0, 0, Color.Black);
                             waterfall_dx_device.EndScene();
                             waterfall_dx_device.Present();
@@ -4302,9 +4310,10 @@ namespace PowerSDR
             if (bottom)
             {
                 if (VerLines_bottom_vb == null || f_steps_bottom_old != f_steps_bottom)
-                    VerLines_bottom_vb = new SharpDX.Direct3D9.VertexBuffer(device,
+                    VerLines_bottom_vb = new SlimDX.Direct3D9.VertexBuffer(device,
                         61 * vertexsize2x,
-                        Usage.WriteOnly,
+//                        Usage.WriteOnly,
+                        SlimDX.DXGI.Usage.Shared,
                         VertexFormat.None,
                         Pool.Managed);
                 /*  if (HorLines_bottom_vb == null || h_steps_old != h_steps)
@@ -4318,9 +4327,9 @@ namespace PowerSDR
                   } */
 
                 if (HorLines_bottom_vb == null || h_steps_bottom_old != h_steps_bottom)
-                    HorLines_bottom_vb = new SharpDX.Direct3D9.VertexBuffer(device,
+                    HorLines_bottom_vb = new SlimDX.Direct3D9.VertexBuffer(device,
                         h_steps * vertexsize2x,
-                        SharpDX.Direct3D9.Usage.WriteOnly,
+                        SlimDX.Direct3D9.Usage.WriteOnly,
                         VertexFormat.None,
                         Pool.Managed);
                 if (vertical_bottom_label == null)
@@ -4333,9 +4342,9 @@ namespace PowerSDR
             else
             {
                 if (VerLines_vb == null || f_steps_top_old != f_steps_top)
-                    VerLines_vb = new SharpDX.Direct3D9.VertexBuffer(device,
+                    VerLines_vb = new SlimDX.Direct3D9.VertexBuffer(device,
                          61 * vertexsize2x,
-                         SharpDX.Direct3D9.Usage.WriteOnly,
+                         SlimDX.Direct3D9.Usage.WriteOnly,
                          VertexFormat.None,
                          Pool.Managed);
                 if (HorLines_vb == null || h_steps_top_old != h_steps_top)
